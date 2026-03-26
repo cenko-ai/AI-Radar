@@ -14,6 +14,7 @@ Das **AI Radar Live Dashboard** ist eine schlanke, extrem performante Web-Anwend
   - 🧠 **Logik & Mathe** (Finde Reasoning-Modelle der o1-Klasse)
   - ⚡ **Günstig & Schnell** (Modelle, die unter $0.50 pro 1M Tokens kosten)
   - 📚 **Großer Kontext** (alles >= 128k Tokens)
+- **Der Magische Experten-Assistent:** Tippe dein Fachthema (z.B. "Medizin", "Jura", "Kochen", "Maschinenbau") in die magische Suchleiste ein. Das Dashboard analysiert das Themengebiet, empfiehlt dir die absolut besten Modelle (z.B. OpenAI o1 oder Claude 3.5 Sonnet für komplexe Themen) und hebt den ultimativen **Branchenführer mit einem goldenen "🏆 #1 Empfehlung"-Pokal** hervor!
 - **Kosten-Standardisierung:** Die API-Preise werden automatisch in den Branchenstandard "Preis pro 1.000.000 Tokens" umgerechnet und dargestellt.
 - **Hochwertiges UI/UX:** Atemberaubendes Dark-Mode-Design mit Glassmorphism-Effekten, leuchtenden Akzenten und weichen Mikro-Animationen.
 
