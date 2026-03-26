@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Model Radar | Live Übersicht</title>
+    <meta name="description" content="Immer aktuelles Dashboard über KI Modelle, deren Fähigkeiten und Kosten.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="glow-orb glow-top-left"></div>
+    <div class="glow-orb glow-bottom-right"></div>
+    
+    <div class="app-container">
+        <header class="header">
+            <div class="logo">
+                <div class="logo-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                </div>
+                <h1>AI Radar <span>Live</span></h1>
+            </div>
+            <p class="subtitle">Der stets aktuelle Kompass für die besten KI-Modelle, Preise & Anwendungsgebiete.</p>
+        </header>
+
+        <section class="controls glass-panel">
+            <div class="search-wrapper">
+                <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                <input type="text" id="searchInput" placeholder="Suche Modelle, Anbieter (z.B. GPT-4, Anthropic)...">
+            </div>
+
+            <div class="use-case-filters">
+                <span class="filter-label">Finde das beste Modell für:</span>
+                <div class="chip-group" id="useCaseGroup">
+                    <button class="chip active" data-filter="all">Alle</button>
+                    <button class="chip" data-filter="coding">💻 Programmieren</button>
+                    <button class="chip" data-filter="reasoning">🧠 Logik & Mathe</button>
+                    <button class="chip" data-filter="cheap">⚡ Günstig & Schnell</button>
+                    <button class="chip" data-filter="huge_context">📚 Langes Kontextfenster</button>
+                </div>
+            </div>
+            
+            <div class="sort-controls">
+                <span class="filter-label">Sortieren nach:</span>
+                <select id="sortSelect" class="custom-select">
+                    <option value="popularity">Beliebtheit / Standard</option>
+                    <option value="price_asc">Preis: Aufsteigend</option>
+                    <option value="price_desc">Preis: Absteigend</option>
+                    <option value="context_desc">Kontextgröße: Höchste zuerst</option>
+                </select>
+            </div>
+        </section>
+
+        <main>
+            <div id="loadingState" class="loading-state">
+                <div class="spinner"></div>
+                <p>Lade live Daten von OpenRouter...</p>
+            </div>
+            
+            <div id="errorState" class="error-state hidden">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <p>Fehler beim Laden der API. Bitte aktualisiere die Seite.</p>
+            </div>
+
+            <div id="modelGrid" class="model-grid hidden">
+                <!-- Data will be injected here via JS -->
+            </div>
+            
+            <div id="emptyState" class="empty-state hidden">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                <p>Keine Modelle für diese Suche gefunden.</p>
+            </div>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
