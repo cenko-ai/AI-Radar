@@ -9,9 +9,52 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.getElementById('searchInput');
     const sortSelect = document.getElementById('sortSelect');
     const chips = document.querySelectorAll('.chip');
+
+    // Magic Search Elements
+    const magicInput = document.getElementById('magicInput');
+    const magicBtn = document.getElementById('magicBtn');
+    const magicBanner = document.getElementById('magicBanner');
+    const magicBannerTitle = document.getElementById('magicBannerTitle');
+    const magicBannerText = document.getElementById('magicBannerText');
+    const clearMagicBtn = document.getElementById('clearMagicBtn');
     
     let allModels = [];
     let currentFilter = 'all';
+    let currentMagicCategory = null;
+
+    // Domain Intelligence Matrix
+    const domainKeywords = {
+        expert: {
+            keywords: ['medizin', 'arzt', 'jura', 'anwalt', 'recht', 'maschinenbau', 'ingenieur', 'wissenschaft', 'forschung', 'mathe', 'physik', 'finanzen', 'analyse', 'strategie', 'studium'],
+            title: 'Die besten Modelle für hochkomplexe Fachthemen',
+            desc: 'Für komplexe Fachgebiete wie Medizin oder Technik brauchst du maximale Intelligenz. Wir empfehlen die absoluten Elite-Modelle (Frontier Models).',
+            match: (id) => id.includes('opus') || id.includes('gpt-4o') || id.includes('gemini-1.5-pro') || id.includes('gemini-2.5-pro') || id.includes('claude-3-7') || id.includes('o1') || id.includes('o3')
+        },
+        creative: {
+            keywords: ['kochen', 'rezept', 'schreiben', 'autor', 'buch', 'blog', 'social media', 'marketing', 'übersetzung', 'gedicht', 'kreativ', 'alltag', 'texten', 'brief', 'email'],
+            title: 'Die besten Modelle für Kreatives & Alltag',
+            desc: 'Hierfür eignen sich schnelle, smarte Modelle mit einem sehr natürlichen und flüssigen Schreibstil hervorragend.',
+            match: (id) => id.includes('haiku') || id.includes('gpt-4o-mini') || id.includes('llama-3.3-70b') || id.includes('gemini-1.5-flash') || id.includes('gemini-2.0-flash')
+        },
+        roleplay: {
+            keywords: ['rollenspiel', 'roleplay', 'charakter', 'spiel', 'gaming', 'fantasie', 'geschichte', 'rp'],
+            title: 'Die besten Modelle für Roleplay & Storytelling',
+            desc: 'Diese Modelle glänzen im Storytelling und sind bekannt dafür, überzeugend in Rollen zu schlüpfen (häufig completely Uncensored).',
+            match: (id) => id.includes('llama-3') || id.includes('mythomax') || id.includes('command-r') || id.includes('wizard') || id.includes('goliath') || id.includes('qwen')
+        },
+        coding: {
+            keywords: ['programmieren', 'coding', 'code', 'skript', 'it', 'informatik', 'web', 'app', 'software', 'entwickler', 'developer', 'html', 'python', 'javascript'],
+            title: 'Die besten Modelle für Programmierung',
+            desc: 'Die absoluten Champions der Branche im Schreiben, Debuggen und Analysieren von Code.',
+            match: (id) => id.includes('sonnet') || id.includes('gpt-4o') || id.includes('deepseek-coder') || id.includes('qwen-2.5-coder') || id.includes('claude-3-7')
+        },
+        general: {
+            keywords: [],
+            title: 'Top Allround-Modelle',
+            desc: 'Wir konnten dein Thema keiner direkten Nische zuordnen. Diese Modelle sind die besten Allrounder für die allermeisten Aufgaben!',
+            match: (id) => id.includes('gpt-4o') || id.includes('claude-3-5') || id.includes('gemini-1.5')
+        }
+    };
 
     // Fetch data from OpenRouter Live API
     async function fetchModels() {
@@ -20,32 +63,21 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!response.ok) throw new Error('Network response was not ok');
             const data = await response.json();
             
-            // Clean up and format the models data
             allModels = data.data.map(model => {
                 const id = model.id;
                 const name = model.name || id;
-                const provider = id.split('/')[0]; // e.g., 'anthropic/claude...' -> 'anthropic'
+                const provider = id.split('/')[0];
                 
-                // OpenRouter gives price per 1 token. We want to show price per 1 Million tokens.
                 const pricePrompt = parseFloat(model.pricing?.prompt || 0) * 1_000_000;
                 const priceCompletion = parseFloat(model.pricing?.completion || 0) * 1_000_000;
                 const totalRefPrice = pricePrompt + priceCompletion;
-                
                 const contextLength = parseInt(model.context_length || 0);
                 
                 return {
-                    id,
-                    name,
-                    provider,
-                    pricePrompt,
-                    priceCompletion,
-                    totalRefPrice,
-                    contextLength,
-                    rawModel: model
+                    id, name, provider, pricePrompt, priceCompletion, totalRefPrice, contextLength, rawModel: model
                 };
             });
 
-            // Remove loading state and trigger initial render
             loadingState.classList.add('hidden');
             renderModels();
 
@@ -56,7 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Advanced Formatting Utilities
+    // Formatting Utilities
     function formatPrice(price) {
         if (price === 0) return 'Kostenlos';
         if (price < 0.01) return `< $0.01`;
@@ -69,32 +101,54 @@ document.addEventListener('DOMContentLoaded', () => {
         return length.toString();
     }
 
-    // Heuristics to auto-tag models for the Use Case Matcher
+    // Heuristics for standard quick tags
     function getModelTags(model) {
         const idLower = model.id.toLowerCase();
         let tags = [];
-        
-        // Coding models
-        if (idLower.includes('coder') || idLower.includes('sonnet') || idLower.includes('gpt-4o') || idLower.includes('qwen')) {
-            tags.push('coding');
-        }
-        
-        // Reasoning / Math models
-        if (idLower.includes('o1') || idLower.includes('o3') || idLower.includes('math') || idLower.includes('think') || idLower.includes('reasoning')) {
-            tags.push('reasoning');
-        }
-        
-        // Cheap & Fast (if total cost per 1M is less than $0.50)
-        if (model.totalRefPrice > 0 && model.totalRefPrice < 0.5) {
-            tags.push('cheap');
-        }
-        
-        // Huge Context (>= 128k)
-        if (model.contextLength >= 128000) {
-            tags.push('huge_context');
-        }
-        
+        if (idLower.includes('coder') || idLower.includes('sonnet') || idLower.includes('gpt-4o') || idLower.includes('qwen')) tags.push('coding');
+        if (idLower.includes('o1') || idLower.includes('o3') || idLower.includes('math') || idLower.includes('think') || idLower.includes('reasoning')) tags.push('reasoning');
+        if (model.totalRefPrice > 0 && model.totalRefPrice < 0.5) tags.push('cheap');
+        if (model.contextLength >= 128000) tags.push('huge_context');
         return tags;
+    }
+
+    // Handle Magic Search Execution
+    function executeMagicSearch() {
+        const query = magicInput.value.toLowerCase().trim();
+        if (!query) return;
+
+        // Reset quick filters
+        chips.forEach(c => c.classList.remove('active'));
+        searchInput.value = '';
+        currentFilter = 'magic';
+
+        // Find best matching category
+        let matchedCategory = 'general';
+        for (const [cat, data] of Object.entries(domainKeywords)) {
+            if (cat === 'general') continue;
+            if (data.keywords.some(kw => query.includes(kw))) {
+                matchedCategory = cat;
+                break;
+            }
+        }
+
+        currentMagicCategory = domainKeywords[matchedCategory];
+        
+        // Show Banner
+        magicBannerTitle.textContent = currentMagicCategory.title;
+        magicBannerText.textContent = currentMagicCategory.desc;
+        magicBanner.classList.remove('hidden');
+
+        renderModels();
+    }
+
+    function clearMagicSearch() {
+        magicInput.value = '';
+        currentFilter = 'all';
+        currentMagicCategory = null;
+        magicBanner.classList.add('hidden');
+        chips.forEach(c => c.dataset.filter === 'all' ? c.classList.add('active') : c.classList.remove('active'));
+        renderModels();
     }
 
     function renderModels() {
@@ -105,37 +159,34 @@ document.addEventListener('DOMContentLoaded', () => {
         modelGrid.classList.add('hidden');
         emptyState.classList.add('hidden');
 
-        // Apply Search and Filters
         let filteredModels = allModels.filter(model => {
             const matchesSearch = model.name.toLowerCase().includes(searchTerm) || 
                                   model.provider.toLowerCase().includes(searchTerm) ||
                                   model.id.toLowerCase().includes(searchTerm);
             
+            if (currentFilter === 'magic' && currentMagicCategory) {
+                return currentMagicCategory.match(model.id.toLowerCase()) && matchesSearch;
+            }
+
             const tags = getModelTags(model);
-            const matchesFilter = currentFilter === 'all' || tags.includes(currentFilter);
+            const matchesFilter = currentFilter === 'all' || currentFilter === 'magic' || tags.includes(currentFilter);
             
             return matchesSearch && matchesFilter;
         });
 
-        // Apply Sorting
+        // Sorting
         filteredModels.sort((a, b) => {
-            if (sortBy === 'price_asc') {
-                return a.pricePrompt - b.pricePrompt;
-            } else if (sortBy === 'price_desc') {
-                return b.pricePrompt - a.pricePrompt;
-            } else if (sortBy === 'context_desc') {
-                return b.contextLength - a.contextLength;
-            } else {
-                // popularity / standard (Let's keep the API's default order or push big names up)
-                const aTop = a.id.includes('openai') || a.id.includes('anthropic') || a.id.includes('google');
-                const bTop = b.id.includes('openai') || b.id.includes('anthropic') || b.id.includes('google');
-                if (aTop && !bTop) return -1;
-                if (!aTop && bTop) return 1;
-                return 0; // maintain original order otherwise
-            }
+            if (sortBy === 'price_asc') return a.pricePrompt - b.pricePrompt;
+            if (sortBy === 'price_desc') return b.pricePrompt - a.pricePrompt;
+            if (sortBy === 'context_desc') return b.contextLength - a.contextLength;
+
+            const aTop = a.id.includes('openai') || a.id.includes('anthropic') || a.id.includes('google');
+            const bTop = b.id.includes('openai') || b.id.includes('anthropic') || b.id.includes('google');
+            if (aTop && !bTop) return -1;
+            if (!aTop && bTop) return 1;
+            return 0;
         });
 
-        // If no results
         if (filteredModels.length === 0) {
             emptyState.classList.remove('hidden');
             return;
@@ -143,7 +194,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         modelGrid.classList.remove('hidden');
 
-        // Render Cards (limit to 100 to prevent DOM lag on massive searches, but OpenRouter has ~200)
+        // Render Cards (limit to 100 max)
         filteredModels.slice(0, 100).forEach((model, index) => {
             const card = document.createElement('div');
             card.className = 'model-card fade-in';
@@ -193,21 +244,35 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Event Listeners
-    searchInput.addEventListener('input', renderModels);
+    searchInput.addEventListener('input', () => {
+        if (currentFilter === 'magic') clearMagicSearch();
+        renderModels();
+    });
+    
     sortSelect.addEventListener('change', renderModels);
 
     chips.forEach(chip => {
         chip.addEventListener('click', (e) => {
-            // Remove active from all
             chips.forEach(c => c.classList.remove('active'));
-            // Add active to clicked
             e.target.classList.add('active');
+            
+            if (currentFilter === 'magic') {
+                magicBanner.classList.add('hidden');
+                magicInput.value = '';
+                currentMagicCategory = null;
+            }
             
             currentFilter = e.target.dataset.filter;
             renderModels();
         });
     });
 
-    // Start Fetching on Load
+    magicBtn.addEventListener('click', executeMagicSearch);
+    magicInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') executeMagicSearch();
+    });
+    clearMagicBtn.addEventListener('click', clearMagicSearch);
+
+    // Start
     fetchModels();
 });
