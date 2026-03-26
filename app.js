@@ -22,41 +22,52 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentFilter = 'all';
     let currentMagicCategory = null;
 
-    // Domain Intelligence Matrix
-    const domainKeywords = {
-        expert: {
-            keywords: ['medizin', 'arzt', 'jura', 'anwalt', 'recht', 'maschinenbau', 'ingenieur', 'wissenschaft', 'forschung', 'mathe', 'physik', 'finanzen', 'analyse', 'strategie', 'studium'],
-            title: 'Die besten Modelle für hochkomplexe Fachthemen',
-            desc: 'Für komplexe Fachgebiete wie Medizin oder Technik brauchst du maximale Intelligenz. Wir empfehlen die absoluten Elite-Modelle (Frontier Models).',
-            match: (id) => id.includes('opus') || id.includes('gpt-4o') || id.includes('gemini-1.5-pro') || id.includes('gemini-2.5-pro') || id.includes('claude-3-7') || id.includes('o1') || id.includes('o3')
+    // Hochspezifische Domain-Intelligenz ("Wirklich die Beste")
+    const specificDomains = {
+        medizin: {
+            keywords: ['medizin', 'arzt', 'krankheit', 'gesundheit', 'diagnose', 'pharma', 'biologie'],
+            bestModels: ['openai/o1', 'anthropic/claude-3.5-sonnet', 'google/gemini-1.5-pro', 'openai/gpt-4o'],
+            title: 'Medizin & Biowissenschaften',
+            desc: 'Für medizinische Analysen führt aktuell kein Weg an High-Reasoning-Modellen vorbei. OpenAI o1 und Claude 3 haben auf medizinischen Benchmark-Tests (MedQA) die höchsten Scores erzielt, die KIs jemals hatten.'
         },
-        creative: {
-            keywords: ['kochen', 'rezept', 'schreiben', 'autor', 'buch', 'blog', 'social media', 'marketing', 'übersetzung', 'gedicht', 'kreativ', 'alltag', 'texten', 'brief', 'email'],
-            title: 'Die besten Modelle für Kreatives & Alltag',
-            desc: 'Hierfür eignen sich schnelle, smarte Modelle mit einem sehr natürlichen und flüssigen Schreibstil hervorragend.',
-            match: (id) => id.includes('haiku') || id.includes('gpt-4o-mini') || id.includes('llama-3.3-70b') || id.includes('gemini-1.5-flash') || id.includes('gemini-2.0-flash')
+        jura: {
+            keywords: ['jura', 'anwalt', 'recht', 'gesetz', 'vertrag', 'urteil', 'steuern'],
+            bestModels: ['anthropic/claude-3.5-sonnet', 'openai/o1', 'openai/gpt-4o'],
+            title: 'Jura, Recht & Verträge',
+            desc: 'Die Verarbeitung komplexer Rechtsdokumente erfordert absolute Textpräzision. Claude ist mit seiner unglaublichen Text- und Mustererkennung (sowie großem Kontextfenster) der Branchenfavorit für Rechtstexte.'
         },
-        roleplay: {
-            keywords: ['rollenspiel', 'roleplay', 'charakter', 'spiel', 'gaming', 'fantasie', 'geschichte', 'rp'],
-            title: 'Die besten Modelle für Roleplay & Storytelling',
-            desc: 'Diese Modelle glänzen im Storytelling und sind bekannt dafür, überzeugend in Rollen zu schlüpfen (häufig completely Uncensored).',
-            match: (id) => id.includes('llama-3') || id.includes('mythomax') || id.includes('command-r') || id.includes('wizard') || id.includes('goliath') || id.includes('qwen')
+        maschinenbau: {
+            keywords: ['maschinenbau', 'ingenieur', 'technik', 'physik', 'mechanik', 'cad', 'konstruktion', 'mathe', 'mathematik'],
+            bestModels: ['openai/o1', 'anthropic/claude-3.5-sonnet', 'google/gemini-1.5-pro'],
+            title: 'Ingenieurwesen, Physik & Mathe',
+            desc: 'Diese Themen sind stark logisch und abstrakt geprägt. OpenAI o1 ist dank seines tiefgehenden "Chain-of-Thought" Reasonings momentan der absolute Goldstandard für Ingenieure und Mathematiker.'
         },
-        coding: {
+        kochen: {
+            keywords: ['kochen', 'rezept', 'backen', 'ernährung', 'küche', 'lebensmittel', 'essen', 'diät'],
+            bestModels: ['openai/gpt-4o-mini', 'anthropic/claude-3-haiku', 'meta-llama/llama-3.1-70b-instruct'],
+            title: 'Kochen, Rezepte & Lifestyle',
+            desc: 'Hier brauchst du keine teuren Super-Computer. Schnelle, ausdrucksstarke Modelle wie GPT-4o-mini oder Claude Haiku liefern erstklassige, kreative Rezepte für praktisch null Cent pro Anfrage.'
+        },
+        programmieren: {
             keywords: ['programmieren', 'coding', 'code', 'skript', 'it', 'informatik', 'web', 'app', 'software', 'entwickler', 'developer', 'html', 'python', 'javascript'],
-            title: 'Die besten Modelle für Programmierung',
-            desc: 'Die absoluten Champions der Branche im Schreiben, Debuggen und Analysieren von Code.',
-            match: (id) => id.includes('sonnet') || id.includes('gpt-4o') || id.includes('deepseek-coder') || id.includes('qwen-2.5-coder') || id.includes('claude-3-7')
+            bestModels: ['anthropic/claude-3.5-sonnet', 'openai/o1', 'openai/gpt-4o', 'deepseek/deepseek-coder'],
+            title: 'Softwareentwicklung & Programmierung',
+            desc: 'Claude 3.5 Sonnet wird von Entwicklern weitreichend als der unangefochtene Champion des Codings angesehen, dicht gefolgt von OpenAI o1 für extrem komplexe Architektur-Probleme.'
+        },
+        kreativ: {
+            keywords: ['schreiben', 'autor', 'buch', 'blog', 'social media', 'marketing', 'übersetzung', 'gedicht', 'kreativ', 'texten', 'story', 'brief'],
+            bestModels: ['anthropic/claude-3-opus', 'anthropic/claude-3.5-sonnet', 'openai/gpt-4o', 'meta-llama/llama-3.1-70b-instruct'],
+            title: 'Kreatives Schreiben & Storytelling',
+            desc: 'Claude 3 Opus ist berühmt für seinen immens natürlichen, literarischen Schreibstil, der viel weniger "roboterhaft" klingt als die Konkurrenz. Perfekt für Blogs, Bücher und kreative Texte!'
         },
         general: {
             keywords: [],
+            bestModels: ['openai/gpt-4o', 'anthropic/claude-3.5-sonnet', 'google/gemini-1.5-pro'],
             title: 'Top Allround-Modelle',
-            desc: 'Wir konnten dein Thema keiner direkten Nische zuordnen. Diese Modelle sind die besten Allrounder für die allermeisten Aufgaben!',
-            match: (id) => id.includes('gpt-4o') || id.includes('claude-3-5') || id.includes('gemini-1.5')
+            desc: 'Wir konnten dein Thema keiner direkten Nische zuordnen, aber mit diesen 3 Modellen triffst du immer die beste Wahl für allgemeine Aufgaben!'
         }
     };
 
-    // Fetch data from OpenRouter Live API
     async function fetchModels() {
         try {
             const response = await fetch(API_URL);
@@ -67,20 +78,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 const id = model.id;
                 const name = model.name || id;
                 const provider = id.split('/')[0];
-                
                 const pricePrompt = parseFloat(model.pricing?.prompt || 0) * 1_000_000;
                 const priceCompletion = parseFloat(model.pricing?.completion || 0) * 1_000_000;
                 const totalRefPrice = pricePrompt + priceCompletion;
                 const contextLength = parseInt(model.context_length || 0);
                 
-                return {
-                    id, name, provider, pricePrompt, priceCompletion, totalRefPrice, contextLength, rawModel: model
-                };
+                return { id, name, provider, pricePrompt, priceCompletion, totalRefPrice, contextLength, rawModel: model };
             });
 
             loadingState.classList.add('hidden');
             renderModels();
-
         } catch (error) {
             console.error("Error fetching models:", error);
             loadingState.classList.add('hidden');
@@ -88,7 +95,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Formatting Utilities
     function formatPrice(price) {
         if (price === 0) return 'Kostenlos';
         if (price < 0.01) return `< $0.01`;
@@ -112,29 +118,41 @@ document.addEventListener('DOMContentLoaded', () => {
         return tags;
     }
 
-    // Handle Magic Search Execution
+    // Helper: Is this model strictly one of the exact IDs defined?
+    function isExactModelMatch(modelId, bestModelsArray) {
+        // We match exactly, or with openrouter additions like ":free" or date codes. 
+        // Example "openai/gpt-4o" should match "openai/gpt-4o-2024-05-13" or "openai/gpt-4o"
+        return bestModelsArray.some(bestId => modelId.startsWith(bestId));
+    }
+
+    // Helper: Find index of model in bestModels array to rank it
+    function getModelRank(modelId, bestModelsArray) {
+        const index = bestModelsArray.findIndex(bestId => modelId.startsWith(bestId));
+        return index !== -1 ? index : 999;
+    }
+
     function executeMagicSearch() {
         const query = magicInput.value.toLowerCase().trim();
         if (!query) return;
 
-        // Reset quick filters
         chips.forEach(c => c.classList.remove('active'));
         searchInput.value = '';
         currentFilter = 'magic';
 
         // Find best matching category
         let matchedCategory = 'general';
-        for (const [cat, data] of Object.entries(domainKeywords)) {
+        for (const [cat, data] of Object.entries(specificDomains)) {
             if (cat === 'general') continue;
-            if (data.keywords.some(kw => query.includes(kw))) {
+            // Tokenize query for better matching
+            const words = query.split(/[\s,]+/);
+            if (data.keywords.some(kw => words.some(w => w.includes(kw) || kw.includes(w) && w.length > 3))) {
                 matchedCategory = cat;
                 break;
             }
         }
 
-        currentMagicCategory = domainKeywords[matchedCategory];
+        currentMagicCategory = specificDomains[matchedCategory];
         
-        // Show Banner
         magicBannerTitle.textContent = currentMagicCategory.title;
         magicBannerText.textContent = currentMagicCategory.desc;
         magicBanner.classList.remove('hidden');
@@ -159,23 +177,36 @@ document.addEventListener('DOMContentLoaded', () => {
         modelGrid.classList.add('hidden');
         emptyState.classList.add('hidden');
 
-        let filteredModels = allModels.filter(model => {
-            const matchesSearch = model.name.toLowerCase().includes(searchTerm) || 
-                                  model.provider.toLowerCase().includes(searchTerm) ||
-                                  model.id.toLowerCase().includes(searchTerm);
-            
-            if (currentFilter === 'magic' && currentMagicCategory) {
-                return currentMagicCategory.match(model.id.toLowerCase()) && matchesSearch;
-            }
+        let filteredModels = allModels;
 
-            const tags = getModelTags(model);
-            const matchesFilter = currentFilter === 'all' || currentFilter === 'magic' || tags.includes(currentFilter);
-            
-            return matchesSearch && matchesFilter;
-        });
+        // Apply Magic Category Filter: ALWAYS RESTRICT TO EXACT 'BEST' MODELS if magic is active
+        if (currentFilter === 'magic' && currentMagicCategory) {
+            filteredModels = allModels.filter(model => {
+                return isExactModelMatch(model.id.toLowerCase(), currentMagicCategory.bestModels);
+            });
+            // Also deduplicate base vs dated models if they both match. (Keep the base mostly)
+            // But let's keep it simple for now, OpenRouter usually has 1 main endpoint per model.
+        } else {
+            // Apply standard search & quick filters
+            filteredModels = allModels.filter(model => {
+                const matchesSearch = model.name.toLowerCase().includes(searchTerm) || 
+                                      model.provider.toLowerCase().includes(searchTerm) ||
+                                      model.id.toLowerCase().includes(searchTerm);
+                const tags = getModelTags(model);
+                const matchesFilter = currentFilter === 'all' || tags.includes(currentFilter);
+                return matchesSearch && matchesFilter;
+            });
+        }
 
         // Sorting
         filteredModels.sort((a, b) => {
+            if (currentFilter === 'magic' && currentMagicCategory) {
+                // If MAGIC, sort strictly by our curated ranking!
+                const rankA = getModelRank(a.id.toLowerCase(), currentMagicCategory.bestModels);
+                const rankB = getModelRank(b.id.toLowerCase(), currentMagicCategory.bestModels);
+                return rankA - rankB;
+            }
+
             if (sortBy === 'price_asc') return a.pricePrompt - b.pricePrompt;
             if (sortBy === 'price_desc') return b.pricePrompt - a.pricePrompt;
             if (sortBy === 'context_desc') return b.contextLength - a.contextLength;
@@ -187,26 +218,50 @@ document.addEventListener('DOMContentLoaded', () => {
             return 0;
         });
 
-        if (filteredModels.length === 0) {
+        // Filter out extreme duplicates if necessary (optional)
+        const seenBases = new Set();
+        const finalModels = [];
+        for (const model of filteredModels) {
+            // Some basic deduplication based on name so we don't list gpt-4o and gpt-4o-2024-05-13 if magic search is active
+            if (currentFilter === 'magic') {
+                const baseName = model.name.split(' (')[0].split(' - ')[0]; // E.g., 'GPT-4o'
+                if (!seenBases.has(baseName)) {
+                    seenBases.add(baseName);
+                    finalModels.push(model);
+                }
+            } else {
+                finalModels.push(model);
+            }
+        }
+
+        if (finalModels.length === 0) {
             emptyState.classList.remove('hidden');
             return;
         }
 
         modelGrid.classList.remove('hidden');
 
-        // Render Cards (limit to 100 max)
-        filteredModels.slice(0, 100).forEach((model, index) => {
+        // Render Cards
+        finalModels.slice(0, 100).forEach((model, index) => {
             const card = document.createElement('div');
             card.className = 'model-card fade-in';
             card.style.animationDelay = `${(index % 10) * 0.05}s`;
 
             const providerName = model.provider.charAt(0).toUpperCase() + model.provider.slice(1);
-            const tagsSpan = getModelTags(model).map(tag => {
-                const labels = { coding: 'Coding', reasoning: 'Logik', cheap: 'Erschwinglich', huge_context: 'Großer Kontext' };
-                return `<span class="tag">${labels[tag] || tag}</span>`;
-            }).join('');
+            const isNumberOne = (currentFilter === 'magic' && index === 0);
+
+            // Give the #1 model a gold glow!
+            if (isNumberOne) {
+                card.style.border = '2px solid rgba(251, 191, 36, 0.8)';
+                card.style.boxShadow = '0 0 20px rgba(251, 191, 36, 0.2)';
+            }
+
+            const trophyHtml = isNumberOne ? `<div style="background: rgba(251, 191, 36, 0.15); color: #fbbf24; padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 0.8rem; margin-bottom: 12px; display: inline-flex; align-items: center; gap: 6px;">
+                🏆 #1 Empfehlung
+            </div>` : '';
 
             card.innerHTML = `
+                ${trophyHtml}
                 <div class="card-header">
                     <span class="provider-badge">${providerName}</span>
                     <span class="model-id" title="${model.id}">${model.id.length > 20 ? model.id.substring(model.provider.length+1, 30) + '...' : model.id}</span>
@@ -232,10 +287,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span>Kontext-Fenster</span>
                         <span>${formatContext(model.contextLength)} Tokens</span>
                     </div>
-                </div>
-
-                <div class="card-footer">
-                    ${tagsSpan}
                 </div>
             `;
 
